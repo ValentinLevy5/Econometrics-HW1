@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 
 from src.config import THEME, PRICES_CACHE, RETURNS_CACHE, SECTOR_CACHE, INDEX_TICKER
-from src.utils import section_header, interpretation_box, metric_card_html
+from src.utils import section_header, interpretation_box, metric_card_html, page_css, page_header_html
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -27,47 +27,7 @@ st.set_page_config(
 )
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
-st.markdown(
-    f"""
-    <style>
-    /* Main background */
-    .stApp {{ background-color: {THEME['bg']}; color: {THEME['text']}; }}
-    [data-testid="stSidebar"] {{
-        background-color: {THEME['bg_secondary']};
-        border-right: 1px solid {THEME['border']};
-    }}
-    /* Header banner */
-    .header-banner {{
-        background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
-        border: 1px solid {THEME['border']};
-        border-radius: 10px;
-        padding: 28px 32px;
-        margin-bottom: 20px;
-    }}
-    .header-banner h1 {{
-        margin: 0; font-size: 2rem; font-weight: 700;
-        background: linear-gradient(90deg, #388bfd, #2ea043);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }}
-    .header-banner p {{
-        color: {THEME['text_dim']}; margin: 6px 0 0 0; font-size: 0.95rem;
-    }}
-    /* Metrics row */
-    div[data-testid="metric-container"] {{
-        background-color: {THEME['bg_card']};
-        border: 1px solid {THEME['border']};
-        border-radius: 8px;
-        padding: 10px 16px;
-    }}
-    /* Tables */
-    thead tr th {{ background-color: {THEME['bg_secondary']} !important; }}
-    /* Scrollbar */
-    ::-webkit-scrollbar {{ width: 6px; }}
-    ::-webkit-scrollbar-thumb {{ background: {THEME['border']}; border-radius: 3px; }}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 # ── Cached data loaders ───────────────────────────────────────────────────────
@@ -106,39 +66,19 @@ def cached_sector_info(tickers: tuple, force: bool = False):
 def render_sidebar():
     st.sidebar.markdown(
         f"""
-        <div style="padding: 10px 0 16px 0;">
-            <div style="font-size:1.1rem;font-weight:700;color:{THEME['text']}">
+        <div style="padding:12px 0 16px 0">
+            <div style="font-size:1.05rem;font-weight:700;
+                        background:linear-gradient(90deg,#388bfd,#2ea043);
+                        -webkit-background-clip:text;-webkit-text-fill-color:transparent">
                 📈 FinEC Dashboard
             </div>
-            <div style="font-size:0.75rem;color:{THEME['text_dim']};margin-top:4px">
-                Financial Econometrics · S&P 500 Moments
+            <div style="font-size:0.73rem;color:{THEME['text_dim']};margin-top:4px">
+                Financial Econometrics · S&P 500 Return Moments
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(
-        f"<div style='font-size:0.75rem;color:{THEME['text_dim']}'>Navigation</div>",
-        unsafe_allow_html=True,
-    )
-    pages = {
-        "🏠 Data Pipeline":              "app",
-        "🗺️ Overview / Market Map":      "pages/1_Overview",
-        "📊 Stock-Level Moments":        "pages/2_Stock_Moments",
-        "📈 Rolling Index Moments":      "pages/3_Rolling_Index_Moments",
-        "🌊 Cross-Sectional Density":    "pages/4_Cross_Sectional_Density",
-        "🔗 Metric Relationships":       "pages/5_Metric_Relationships",
-        "🧩 Correlation Analysis":       "pages/6_Correlation_Analysis",
-        "⏳ Stability Analysis":         "pages/7_Stability_Analysis",
-    }
-    for name in pages:
-        st.sidebar.markdown(
-            f"<div style='padding:4px 0;font-size:0.85rem'>{name}</div>",
-            unsafe_allow_html=True,
-        )
-
     st.sidebar.markdown("---")
     force_refresh = st.sidebar.button("🔄 Force Refresh Data", use_container_width=True)
     return force_refresh
@@ -151,13 +91,11 @@ def main():
 
     # ── Header ────────────────────────────────────────────────────────────────
     st.markdown(
-        """
-        <div class="header-banner">
-            <h1>S&P 500 Return Moments Dashboard</h1>
-            <p>Financial Econometrics · Daily adjusted close prices from Yahoo Finance ·
-               Percentage log returns · 501 series</p>
-        </div>
-        """,
+        page_header_html(
+            "S&P 500 Return Moments Dashboard",
+            "Financial Econometrics · Daily adjusted close prices from Yahoo Finance · Percentage log returns · 501 series",
+            "📈",
+        ),
         unsafe_allow_html=True,
     )
 

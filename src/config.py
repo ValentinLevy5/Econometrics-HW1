@@ -74,13 +74,40 @@ PLOTLY_LAYOUT_DEFAULTS = dict(
     template=PLOTLY_TEMPLATE,
     paper_bgcolor=THEME["bg"],
     plot_bgcolor=THEME["bg_secondary"],
-    font=dict(family="Inter, Helvetica, Arial, sans-serif", color=THEME["text"]),
-    margin=dict(l=50, r=30, t=60, b=50),
+    font=dict(family="Inter, system-ui, -apple-system, sans-serif", color=THEME["text"], size=12),
+    margin=dict(l=55, r=30, t=65, b=55),
     colorway=[
         THEME["blue"], THEME["green_bright"], THEME["orange"],
         THEME["purple"], THEME["teal"], THEME["yellow"],
         THEME["red_bright"], "#79c0ff", "#a5d6ff",
     ],
+    xaxis=dict(
+        showgrid=False,
+        linecolor=THEME["border"],
+        tickfont=dict(size=11, color=THEME["text_dim"]),
+        title_font=dict(size=12, color=THEME["text_dim"]),
+    ),
+    yaxis=dict(
+        showgrid=True,
+        gridcolor=THEME["border"],
+        gridwidth=0.5,
+        linecolor=THEME["border"],
+        tickfont=dict(size=11, color=THEME["text_dim"]),
+        title_font=dict(size=12, color=THEME["text_dim"]),
+    ),
+    hoverlabel=dict(
+        bgcolor=THEME["bg_card"],
+        bordercolor=THEME["border"],
+        font=dict(family="Inter, system-ui, sans-serif", size=12, color=THEME["text"]),
+    ),
+    legend=dict(
+        bgcolor="rgba(0,0,0,0)",
+        bordercolor=THEME["border"],
+        borderwidth=1,
+        font=dict(size=11, color=THEME["text_dim"]),
+    ),
+    # Explicitly set title text to "" so Plotly.js never renders "undefined"
+    title=dict(text="", font=dict(size=14, color=THEME["text"])),
 )
 
 # ── Sector color palette ─────────────────────────────────────────────────────

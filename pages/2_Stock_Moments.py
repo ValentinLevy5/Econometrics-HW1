@@ -15,14 +15,10 @@ import pandas as pd
 import numpy as np
 
 from src.config import THEME, SECTOR_CACHE, MOMENT_LABELS, MOMENT_COLS
-from src.utils import section_header, interpretation_box
+from src.utils import section_header, interpretation_box, page_css, page_header_html
 
 st.set_page_config(page_title="Stock Moments | FinEC", page_icon="📊", layout="wide")
-st.markdown(f"""<style>
-.stApp {{ background-color: {THEME['bg']}; color: {THEME['text']}; }}
-[data-testid="stSidebar"] {{ background-color: {THEME['bg_secondary']}; border-right:1px solid {THEME['border']}; }}
-div[data-testid="metric-container"] {{ background-color:{THEME['bg_card']}; border:1px solid {THEME['border']}; border-radius:8px; padding:10px 16px; }}
-</style>""", unsafe_allow_html=True)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 # ── Loaders ───────────────────────────────────────────────────────────────────
@@ -33,9 +29,23 @@ def load_returns():
     return r, get_stock_returns(r) if r is not None else None
 
 @st.cache_data(show_spinner=False)
-def load_moments(_stock_ret):
+def load_moments_for_period(period: str = "Full Sample"):
+    """
+    Load stock moments for a given period.
+    Full Sample uses/updates the on-disk Parquet cache.
+    Subperiod computations are kept in Streamlit's memory cache only,
+    so they never corrupt the full-sample Parquet file.
+    """
+    from src.preprocessing import load_cached_returns, get_stock_returns, filter_period
     from src.analytics import compute_stock_moments
-    return compute_stock_moments(_stock_ret)
+    r = load_cached_returns()
+    if r is None:
+        return None
+    if period != "Full Sample":
+        r = filter_period(r, period=period)
+    stock_r = get_stock_returns(r)
+    is_full = (period == "Full Sample")
+    return compute_stock_moments(stock_r, force_refresh=not is_full, save_cache=is_full)
 
 @st.cache_data(show_spinner=False)
 def load_sector():
@@ -44,7 +54,7 @@ def load_sector():
     return pd.read_parquet(SECTOR_CACHE)
 
 # ── Main ──────────────────────────────────────────────────────────────────────
-st.markdown(section_header("Stock-Level Moments", "Q2 — Descriptive statistics for all S&P 500 stocks"), unsafe_allow_html=True)
+st.markdown(page_header_html("Stock-Level Moments", "Q2 — Mean, variance, skewness, kurtosis, 1st & 99th percentile for every S&P 500 stock", "📊"), unsafe_allow_html=True)
 
 returns, stock_ret = load_returns()
 if returns is None:
@@ -55,8 +65,6 @@ sector_df = load_sector()
 sector_map = {}
 if sector_df is not None:
     sector_map = dict(zip(sector_df.index, sector_df["sector"].fillna("Unknown")))
-
-moments = load_moments(stock_ret)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -76,15 +84,9 @@ with st.sidebar:
     # Ticker search
     ticker_search = st.text_input("Search ticker", "").upper()
 
-# Recompute if non-full period
-if period != "Full Sample":
-    from src.preprocessing import filter_period
-    with st.spinner(f"Computing moments for {period}…"):
-        sub_ret = filter_period(returns, period=period)
-        from src.preprocessing import get_stock_returns as gsr
-        stock_sub = gsr(sub_ret)
-        from src.analytics import compute_stock_moments
-        moments = compute_stock_moments(stock_sub, force_refresh=True)
+# Load moments for the selected period (cached per-period, no cache corruption)
+with st.spinner(f"Loading moments for {period}…"):
+    moments = load_moments_for_period(period)
 
 # Add sector column
 moments_display = moments.copy()

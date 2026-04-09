@@ -15,27 +15,28 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 
 from src.config import THEME, SECTOR_CACHE, MOMENT_COLS, MOMENT_LABELS, PLOTLY_LAYOUT_DEFAULTS
-from src.utils import section_header, interpretation_box
+from src.utils import section_header, interpretation_box, page_css, page_header_html
 
 
 st.set_page_config(page_title="Metric Relationships | FinEC", page_icon="🔗", layout="wide")
-st.markdown(f"""<style>
-.stApp {{ background-color:{THEME['bg']}; color:{THEME['text']}; }}
-[data-testid="stSidebar"] {{ background-color:{THEME['bg_secondary']}; border-right:1px solid {THEME['border']}; }}
-div[data-testid="metric-container"] {{ background-color:{THEME['bg_card']}; border:1px solid {THEME['border']}; border-radius:8px; padding:10px 16px; }}
-</style>""", unsafe_allow_html=True)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
 def load_moments(period="Full Sample"):
+    """
+    Load stock moments for the given period.
+    Subperiods use save_cache=False to prevent corrupting the full-sample cache.
+    """
     from src.preprocessing import load_cached_returns, get_stock_returns, filter_period
+    from src.analytics import compute_stock_moments
     r = load_cached_returns()
     if r is None:
         return None
-    if period != "Full Sample":
+    is_full = (period == "Full Sample")
+    if not is_full:
         r = filter_period(r, period=period)
-    from src.analytics import compute_stock_moments
-    return compute_stock_moments(get_stock_returns(r), force_refresh=(period != "Full Sample"))
+    return compute_stock_moments(get_stock_returns(r), force_refresh=not is_full, save_cache=is_full)
 
 
 @st.cache_data(show_spinner=False)
@@ -84,9 +85,10 @@ def safe_pearson(x, y):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 st.markdown(
-    section_header(
+    page_header_html(
         "Pairwise Metric Relationships",
-        "Q5 — All 15 pairwise scatterplots of the six stock-level moments",
+        "Q5 — All C(6,2)=15 pairwise scatterplots · OLS trend lines · sector coloring",
+        "🔗",
     ),
     unsafe_allow_html=True,
 )

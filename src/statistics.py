@@ -74,6 +74,7 @@ def compute_stock_index_corr(
 def compute_pairwise_corr(
     returns: pd.DataFrame,
     force_refresh: bool = False,
+    save_cache: bool = True,
     method: str = "pearson",
 ) -> pd.DataFrame:
     """
@@ -85,6 +86,8 @@ def compute_pairwise_corr(
     ----------
     returns       : pd.DataFrame  % log returns (dates × stocks)
     force_refresh : bypass Parquet cache
+    save_cache    : persist result to disk (set False for subperiod calls to
+                    avoid overwriting the full-sample cache)
     method        : 'pearson' or 'spearman'
 
     Returns
@@ -100,8 +103,11 @@ def compute_pairwise_corr(
                 method, returns.shape[1], returns.shape[1])
 
     corr = returns.corr(method=method, min_periods=50)
-    corr.to_parquet(CORR_CACHE)
-    logger.info("Pairwise correlation matrix saved to cache.")
+    if save_cache:
+        corr.to_parquet(CORR_CACHE)
+        logger.info("Pairwise correlation matrix saved to cache.")
+    else:
+        logger.info("Pairwise correlation matrix computed (not cached to disk).")
     return corr
 
 

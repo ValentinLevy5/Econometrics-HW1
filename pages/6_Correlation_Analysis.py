@@ -12,14 +12,10 @@ import pandas as pd
 import numpy as np
 
 from src.config import THEME, SECTOR_CACHE
-from src.utils import section_header, interpretation_box, metric_card_html
+from src.utils import section_header, interpretation_box, metric_card_html, page_css, page_header_html
 
 st.set_page_config(page_title="Correlation Analysis | FinEC", page_icon="🧩", layout="wide")
-st.markdown(f"""<style>
-.stApp {{ background-color:{THEME['bg']}; color:{THEME['text']}; }}
-[data-testid="stSidebar"] {{ background-color:{THEME['bg_secondary']}; border-right:1px solid {THEME['border']}; }}
-div[data-testid="metric-container"] {{ background-color:{THEME['bg_card']}; border:1px solid {THEME['border']}; border-radius:8px; padding:10px 16px; }}
-</style>""", unsafe_allow_html=True)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -39,25 +35,44 @@ def load_sector():
     return pd.read_parquet(SECTOR_CACHE)
 
 @st.cache_data(show_spinner=False)
-def get_corr_to_index(_stock_ret, _idx_ret):
+def get_corr_to_index(period: str = "Full Sample"):
+    """Cache by period so switching periods recomputes correlations correctly."""
+    from src.preprocessing import load_cached_returns, get_stock_returns, get_index_returns, filter_period
     from src.statistics import compute_stock_index_corr
-    return compute_stock_index_corr(_stock_ret, _idx_ret)
+    r = load_cached_returns()
+    if r is None:
+        return None
+    if period != "Full Sample":
+        r = filter_period(r, period=period)
+    return compute_stock_index_corr(get_stock_returns(r), get_index_returns(r))
 
-@st.cache_data(show_spinner=False, max_entries=3)
-def get_pairwise_corr(_stock_ret):
+@st.cache_data(show_spinner=False)
+def get_pairwise_corr(period: str = "Full Sample"):
+    """
+    Pairwise correlations keyed by period.
+    Full Sample uses the on-disk Parquet cache (expensive to recompute).
+    Subperiods compute fresh WITHOUT saving to disk to avoid cache corruption.
+    """
+    from src.preprocessing import load_cached_returns, get_stock_returns, filter_period
     from src.statistics import compute_pairwise_corr
-    return compute_pairwise_corr(_stock_ret)
+    r = load_cached_returns()
+    if r is None:
+        return None
+    is_full = (period == "Full Sample")
+    if not is_full:
+        r = filter_period(r, period=period)
+    return compute_pairwise_corr(get_stock_returns(r), force_refresh=not is_full, save_cache=is_full)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
-st.markdown(section_header("Correlation Analysis",
-                            "Q6 — Stock vs. index  |  Q7 — Within- vs. between-sector correlations"),
+st.markdown(page_header_html("Correlation Analysis",
+                             "Q6 — Stock–index correlations  ·  Q7 — Within- vs. between-sector Welch & Mann-Whitney tests",
+                             "🧩"),
             unsafe_allow_html=True)
 
 with st.sidebar:
     st.markdown("### 🧩 Controls")
     period = st.selectbox("Sample period", ["Full Sample", "Pre-2020", "Post-2021"])
-    sector_for_heatmap = st.selectbox("Sector heatmap", ["None"])  # updated below
 
 stock_ret, idx_ret = load_data(period)
 if stock_ret is None:
@@ -77,7 +92,7 @@ if sector_df is not None:
 st.markdown(section_header("Q6 — Stock–Index Correlation Distribution"), unsafe_allow_html=True)
 
 with st.spinner("Computing stock–index correlations…"):
-    corr_idx = get_corr_to_index(stock_ret, idx_ret)
+    corr_idx = get_corr_to_index(period)
 
 c1, c2, c3, c4, c5 = st.columns(5)
 with c1: st.metric("Median Corr.", f"{corr_idx.median():.4f}")
@@ -140,7 +155,7 @@ if not sector_map:
     st.warning("Sector metadata not available. Fetch it via the Data Pipeline page → 'Load sector metadata'.")
 else:
     with st.spinner("Computing pairwise correlation matrix (may take ~30s)…"):
-        pairwise = get_pairwise_corr(stock_ret)
+        pairwise = get_pairwise_corr(period)
 
     from src.sector_analysis import (
         extract_within_between_corr,

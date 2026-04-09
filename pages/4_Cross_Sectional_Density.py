@@ -17,14 +17,10 @@ import pandas as pd
 import numpy as np
 
 from src.config import THEME, XSECTION_STRIDE
-from src.utils import section_header, interpretation_box
+from src.utils import section_header, interpretation_box, page_css, page_header_html
 
 st.set_page_config(page_title="Cross-Sectional Density | FinEC", page_icon="🌊", layout="wide")
-st.markdown(f"""<style>
-.stApp {{ background-color:{THEME['bg']}; color:{THEME['text']}; }}
-[data-testid="stSidebar"] {{ background-color:{THEME['bg_secondary']}; border-right:1px solid {THEME['border']}; }}
-div[data-testid="metric-container"] {{ background-color:{THEME['bg_card']}; border:1px solid {THEME['border']}; border-radius:8px; padding:10px 16px; }}
-</style>""", unsafe_allow_html=True)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -57,7 +53,7 @@ def load_rolling_index():
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
-st.markdown(section_header("Cross-Sectional Return Density", "Q4 — Daily distribution of returns across all stocks"), unsafe_allow_html=True)
+st.markdown(page_header_html("Cross-Sectional Density", "Q4 — 3D KDE surface: time × return × density across all ~500 stocks each day", "🌊"), unsafe_allow_html=True)
 
 stock_ret = load_stock_returns()
 if stock_ret is None:

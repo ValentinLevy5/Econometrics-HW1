@@ -17,14 +17,10 @@ import numpy as np
 import plotly.graph_objects as go
 
 from src.config import THEME, PERIODS, PLOTLY_LAYOUT_DEFAULTS
-from src.utils import section_header, interpretation_box
+from src.utils import section_header, interpretation_box, page_css, page_header_html
 
 st.set_page_config(page_title="Stability Analysis | FinEC", page_icon="⏳", layout="wide")
-st.markdown(f"""<style>
-.stApp {{ background-color:{THEME['bg']}; color:{THEME['text']}; }}
-[data-testid="stSidebar"] {{ background-color:{THEME['bg_secondary']}; border-right:1px solid {THEME['border']}; }}
-div[data-testid="metric-container"] {{ background-color:{THEME['bg_card']}; border:1px solid {THEME['border']}; border-radius:8px; padding:10px 16px; }}
-</style>""", unsafe_allow_html=True)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -73,9 +69,10 @@ def round_numeric_df(df: pd.DataFrame, decimals: int = 4) -> pd.DataFrame:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 st.markdown(
-    section_header(
+    page_header_html(
         "Stability Analysis",
-        "Q8 & Q9 — Subperiod comparisons, KS tests, and risk evolution",
+        "Q8 — Subperiod risk indicators  ·  Q9 — Kolmogorov–Smirnov tests for distributional stability",
+        "⏳",
     ),
     unsafe_allow_html=True,
 )

@@ -22,16 +22,12 @@ from src.config import (
     INDEX_TICKER,
     PLOTLY_LAYOUT_DEFAULTS,
 )
-from src.utils import section_header, interpretation_box
+from src.utils import section_header, interpretation_box, page_css, page_header_html
 from src.visualizations import rolling_moments_plot
 from src.analytics import estimate_kde
 
 st.set_page_config(page_title="Rolling Index Moments | FinEC", page_icon="📈", layout="wide")
-st.markdown(f"""<style>
-.stApp {{ background-color:{THEME['bg']}; color:{THEME['text']}; }}
-[data-testid="stSidebar"] {{ background-color:{THEME['bg_secondary']}; border-right:1px solid {THEME['border']}; }}
-div[data-testid="metric-container"] {{ background-color:{THEME['bg_card']}; border:1px solid {THEME['border']}; border-radius:8px; padding:10px 16px; }}
-</style>""", unsafe_allow_html=True)
+st.markdown(page_css(), unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -91,9 +87,10 @@ def add_vertical_marker(fig, dt, label, color):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 st.markdown(
-    section_header(
+    page_header_html(
         "Rolling Index Moments",
-        f"Q3 — {ROLLING_WINDOW}-day rolling moments of {INDEX_TICKER} daily returns",
+        f"Q3 — {ROLLING_WINDOW}-day rolling mean, variance, skewness & kurtosis of {INDEX_TICKER} daily returns",
+        "📈",
     ),
     unsafe_allow_html=True,
 )

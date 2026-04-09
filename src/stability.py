@@ -191,8 +191,8 @@ def ks_stability_report(
             else:
                 # Use per-stock moment values
                 from src.analytics import compute_stock_moments
-                m1 = compute_stock_moments(get_stock_returns(ret1), force_refresh=True)
-                m2 = compute_stock_moments(get_stock_returns(ret2), force_refresh=True)
+                m1 = compute_stock_moments(get_stock_returns(ret1), force_refresh=True, save_cache=False)
+                m2 = compute_stock_moments(get_stock_returns(ret2), force_refresh=True, save_cache=False)
                 if metric not in m1.columns:
                     continue
                 s1 = m1[metric].dropna().values

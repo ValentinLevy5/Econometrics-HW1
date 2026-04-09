@@ -171,10 +171,17 @@ def metric_card_html(label: str, value: str, delta: str = "", color: str = "#388
 
 
 def section_header(title: str, subtitle: str = "") -> str:
-    sub = f'<p style="color:#8b949e;font-size:0.9rem;margin:0 0 16px 0">{subtitle}</p>' if subtitle else ""
+    sub = (
+        f'<p style="color:#8b949e;font-size:0.88rem;margin:5px 0 0 0;'
+        f'font-weight:400;letter-spacing:0.01em">{subtitle}</p>'
+        if subtitle else ""
+    )
     return f"""
-    <div style="margin:24px 0 8px 0;border-left:3px solid #388bfd;padding-left:12px">
-        <h3 style="color:#e6edf3;margin:0 0 4px 0">{title}</h3>
+    <div style="margin:32px 0 14px 0;padding:12px 16px;
+                background:linear-gradient(90deg,rgba(56,139,253,0.08) 0%,transparent 100%);
+                border-left:3px solid #388bfd;border-radius:0 6px 6px 0">
+        <h3 style="color:#e6edf3;margin:0;font-size:1.1rem;font-weight:700;
+                   letter-spacing:0.01em;line-height:1.3">{title}</h3>
         {sub}
     </div>"""
 
@@ -182,8 +189,150 @@ def section_header(title: str, subtitle: str = "") -> str:
 def interpretation_box(text: str) -> str:
     """Render a styled interpretation / commentary block."""
     return f"""
-    <div style="background:#161b22;border:1px solid #30363d;border-left:3px solid #2ea043;
-                border-radius:6px;padding:14px 18px;margin:12px 0;
-                font-size:0.9rem;color:#c9d1d9;line-height:1.6">
-        <strong style="color:#39d353">📊 Interpretation</strong><br>{text}
+    <div style="background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1c2128 100%);
+                border:1px solid #30363d;border-left:3px solid #2ea043;
+                border-radius:10px;padding:18px 22px;margin:18px 0;
+                font-size:0.9rem;color:#c9d1d9;line-height:1.75;
+                box-shadow:0 2px 8px rgba(0,0,0,0.25)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:1rem">📊</span>
+            <span style="color:#39d353;font-weight:700;font-size:0.82rem;
+                         text-transform:uppercase;letter-spacing:0.1em">Interpretation</span>
+        </div>
+        <div style="border-top:1px solid rgba(46,160,67,0.25);padding-top:10px">{text}</div>
+    </div>"""
+
+
+def page_css() -> str:
+    """
+    Return a complete CSS block for consistent dark-theme styling across all pages.
+    Inject with: st.markdown(page_css(), unsafe_allow_html=True)
+    """
+    from src.config import THEME
+    return f"""
+    <style>
+    /* ── Base ─────────────────────────────────────────────────── */
+    .stApp {{ background-color:{THEME['bg']}; color:{THEME['text']}; font-family:'Inter',system-ui,sans-serif; }}
+    [data-testid="stSidebar"] {{
+        background-color:{THEME['bg_secondary']};
+        border-right:1px solid {THEME['border']};
+    }}
+    [data-testid="stSidebar"] h3 {{
+        font-size:0.9rem !important;
+        color:{THEME['text_dim']} !important;
+        text-transform:uppercase;
+        letter-spacing:0.07em;
+        margin-bottom:8px;
+    }}
+    /* ── Metrics ───────────────────────────────────────────────── */
+    div[data-testid="metric-container"] {{
+        background:linear-gradient(135deg,{THEME['bg_card']} 0%,{THEME['bg_secondary']} 100%);
+        border:1px solid {THEME['border']};
+        border-radius:10px;
+        padding:14px 18px;
+        transition:border-color 0.2s;
+    }}
+    div[data-testid="metric-container"]:hover {{
+        border-color:{THEME['blue']};
+    }}
+    div[data-testid="metric-container"] label {{
+        color:{THEME['text_dim']} !important;
+        font-size:0.75rem !important;
+        text-transform:uppercase;
+        letter-spacing:0.07em;
+        font-weight:500;
+    }}
+    div[data-testid="metric-container"] [data-testid="stMetricValue"] {{
+        font-size:1.45rem !important;
+        font-weight:700 !important;
+        color:{THEME['text']} !important;
+    }}
+    /* ── Tabs ───────────────────────────────────────────────────── */
+    div[data-baseweb="tab-list"] {{
+        background-color:{THEME['bg_secondary']};
+        border-bottom:2px solid {THEME['border']};
+        padding:0 4px;
+        gap:0;
+        flex-wrap:nowrap;
+        overflow-x:auto;
+    }}
+    /* Hide the default BaseWeb animated slide-indicator (causes visual overlap) */
+    div[data-baseweb="tab-highlight"] {{
+        display:none !important;
+    }}
+    div[data-baseweb="tab-border"] {{
+        display:none !important;
+    }}
+    button[data-baseweb="tab"] {{
+        color:{THEME['text_dim']};
+        padding:10px 18px;
+        white-space:nowrap;
+        border-bottom:2px solid transparent !important;
+        border-radius:0 !important;
+        background:transparent !important;
+        font-size:0.88rem;
+        flex-shrink:0;
+    }}
+    button[data-baseweb="tab"]:hover {{
+        color:{THEME['text']};
+        background:rgba(56,139,253,0.06) !important;
+    }}
+    button[aria-selected="true"][data-baseweb="tab"] {{
+        color:{THEME['text']} !important;
+        border-bottom:2px solid {THEME['blue']} !important;
+        font-weight:600;
+    }}
+    /* ── Dataframes ─────────────────────────────────────────────── */
+    .dvn-scroller {{ scrollbar-width:thin; scrollbar-color:{THEME['border']} transparent; }}
+    thead tr th {{ background-color:{THEME['bg_secondary']} !important; color:{THEME['text_dim']} !important; }}
+    tbody tr:hover td {{ background-color:{THEME['bg_card']} !important; }}
+    /* ── Expander ────────────────────────────────────────────────── */
+    details[data-testid="stExpander"] {{
+        background-color:{THEME['bg_secondary']};
+        border:1px solid {THEME['border']};
+        border-radius:8px;
+        margin:6px 0;
+    }}
+    /* ── Scrollbar ───────────────────────────────────────────────── */
+    ::-webkit-scrollbar {{ width:6px; height:6px; }}
+    ::-webkit-scrollbar-track {{ background:transparent; }}
+    ::-webkit-scrollbar-thumb {{ background:{THEME['border']}; border-radius:3px; }}
+    /* ── Sidebar label ───────────────────────────────────────────── */
+    [data-testid="stSidebarContent"] .st-emotion-cache-dvne4q {{
+        font-size:0.85rem;
+    }}
+    /* ── Hide Streamlit footer ────────────────────────────────────── */
+    footer {{ visibility:hidden; }}
+    </style>"""
+
+
+def page_header_html(title: str, subtitle: str = "", icon: str = "📈") -> str:
+    """
+    Premium gradient page banner with subtle mesh pattern and accent divider.
+    """
+    from src.config import THEME
+    sub_html = (
+        f'<p style="color:{THEME["text_dim"]};margin:8px 0 0 0;font-size:0.92rem;'
+        f'font-weight:400;max-width:800px;line-height:1.5">{subtitle}</p>'
+        if subtitle else ""
+    )
+    return f"""
+    <div style="background:linear-gradient(135deg,#0a0e14 0%,#0d1117 40%,#161b22 70%,#0d1117 100%);
+                border:1px solid {THEME['border']};border-radius:12px;
+                padding:26px 32px 24px 32px;margin-bottom:24px;
+                box-shadow:0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(56,139,253,0.1);
+                position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:300px;height:100%;
+                    background:radial-gradient(ellipse at top right,rgba(56,139,253,0.05) 0%,transparent 70%);
+                    pointer-events:none"></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+            <span style="font-size:1.6rem;line-height:1">{icon}</span>
+            <h1 style="margin:0;font-size:1.7rem;font-weight:800;
+                       background:linear-gradient(90deg,#79c0ff 0%,#388bfd 40%,#2ea043 100%);
+                       -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                       letter-spacing:-0.02em">{title}</h1>
+        </div>
+        <div style="height:2px;background:linear-gradient(90deg,rgba(56,139,253,0.6),rgba(46,160,67,0.4),transparent);
+                    border-radius:1px;margin:10px 0 0 0"></div>
+        {sub_html}
     </div>"""

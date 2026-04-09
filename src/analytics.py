@@ -84,6 +84,7 @@ def estimate_kde(
 def compute_stock_moments(
     returns: pd.DataFrame,
     force_refresh: bool = False,
+    save_cache: bool = True,
 ) -> pd.DataFrame:
     """
     Compute six descriptive statistics for each stock's full return history.
@@ -91,7 +92,7 @@ def compute_stock_moments(
     Statistics
     ----------
     mean      : sample mean (%)
-    variance  : sample variance (%²)
+    variance  : sample variance (%²)  [ddof=1]
     skewness  : Fisher's skewness (bias-corrected)
     kurtosis  : excess kurtosis (Fisher, so Gaussian = 0, bias-corrected)
     p1        : 1st percentile (%)
@@ -101,6 +102,9 @@ def compute_stock_moments(
     ----------
     returns       : pd.DataFrame  % log returns  (dates × tickers)
     force_refresh : bypass Parquet cache
+    save_cache    : whether to persist result to the Parquet cache (set False
+                    for subperiod computations to avoid corrupting the
+                    full-sample cache file)
 
     Returns
     -------
@@ -129,8 +133,13 @@ def compute_stock_moments(
 
     df = pd.DataFrame.from_dict(records, orient="index")[MOMENT_COLS]
     df.index.name = "ticker"
-    df.to_parquet(MOMENTS_CACHE)
-    logger.info("Stock moments saved: shape=%s", df.shape)
+
+    if save_cache:
+        df.to_parquet(MOMENTS_CACHE)
+        logger.info("Stock moments saved: shape=%s", df.shape)
+    else:
+        logger.info("Stock moments computed (not cached): shape=%s", df.shape)
+
     return df
 
 
